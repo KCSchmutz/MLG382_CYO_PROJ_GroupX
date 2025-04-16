@@ -1,6 +1,11 @@
 import os
+import pickle
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# Dynamically build the path to the artifacts directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARTIFACTS_DIR = os.path.join(BASE_DIR, '..', 'artifacts')
 
 
 import xgboost as xgb
@@ -17,22 +22,24 @@ def get_DLmodel():
     print("Loading deep learning model...")
     return load_model(r'artifacts/deep_learning_model.h5') 
 
-with open('../artifacts/features.pkl', 'rb') as f:
+
+
+with open(os.path.join(ARTIFACTS_DIR, 'features.pkl'), 'rb') as f:
     features = pickle.load(f)
 
-with open('../artifacts/scaler.pkl', 'rb') as f:
+with open(os.path.join(ARTIFACTS_DIR, 'scaler.pkl'), 'rb') as f:
     scaler = pickle.load(f)
 
-with open('../artifacts/numerical_columns.pkl', 'rb') as f:
+with open(os.path.join(ARTIFACTS_DIR, 'numerical_columns.pkl'), 'rb') as f:
     numerical_cols = pickle.load(f)
 
-with open(r'../artifacts/RandomForestRegressor_model.pkl', 'rb') as f:
+with open(os.path.join(ARTIFACTS_DIR, 'RandomForestRegressor_model.pkl'), 'rb') as f:
     randomforest_model = pickle.load(f)
 
-with open(r'../artifacts/AdaBoostRegressor_model.pkl', 'rb') as f:
+with open(os.path.join(ARTIFACTS_DIR, 'AdaBoostRegressor_model.pkl'), 'rb') as f:
     regression_model = pickle.load(f)
 
-with open(r'../artifacts/XGBRegressor_model.pkl', 'rb') as f:
+with open(os.path.join(ARTIFACTS_DIR, 'XGBRegressor_model.pkl'), 'rb') as f:
     xgboost_model = pickle.load(f)
 
 

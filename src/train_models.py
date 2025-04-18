@@ -20,15 +20,15 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 
 
-# Function to reload the module and train the model
+#Function to reload the module and train the model
 def reload_and_train(X_train, X_test, Y_train, Y_test, model_type="random_forest"):
 
-    # Reload the module to reflect changes (Don't have to restart Kernel everytime if this is included)
+    #Reload the module to reflect changes (Don't have to restart Kernel everytime if this is included)
     import train_models
     importlib.reload(train_models)
     
 
-    # Train the model based on the model_type specified
+    #Train the model based on the model_type specified
     if model_type == "random_forest":
 
         #Calls the function to train a RandomForestRegressor model
@@ -54,6 +54,7 @@ def reload_and_train(X_train, X_test, Y_train, Y_test, model_type="random_forest
         #Adds training and test sets together for deep learning training
         X = pd.concat([X_train, X_test], axis=0)
         Y = pd.concat([Y_train, Y_test], axis=0)
+
         #Calls the function to train a deep learning model
         train_models.train_deep_learning_model(X,Y)
 
@@ -112,7 +113,7 @@ def train_model(model, model_name, X_train, X_test, Y_train, Y_test, output_dir=
         pickle.dump(pipeline, f)
     print(f"Saved model to: {filepath}")
 
-     # Save predictions
+    #Save predictions
     results_df = pd.DataFrame({
         "Model": model_name,
         "Actual": Y_test.values,

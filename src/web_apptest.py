@@ -24,8 +24,8 @@ DL_model = load_model("../artifacts/DeepLearningRegressor.h5", compile=False)
 
 # Load reference data to infer input features
 df_ref = pd.read_csv("../artifacts/processed_data.csv")
-if 'Profit' in df_ref.columns:
-    df_ref.drop(columns=['Profit'], inplace=True)
+if 'TotalItemQuantity' in df_ref.columns:
+    df_ref.drop(columns=['TotalItemQuantity'], inplace=True)
 
 all_features = df_ref.columns.tolist()
 numerical_features = [col for col in df_ref.columns if df_ref[col].nunique() > 10 and not any(prefix in col for prefix in ['RegionName_', 'CountryName_', 'State_', 'City_', 'CategoryName_'])]
@@ -38,7 +38,7 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 app.layout = dbc.Container([
-    html.H2("Profit Prediction Tool", className="text-center text-primary my-4"),
+    html.H2("Total Item Quantity Prediction Tool", className="text-center text-primary my-4"),
 
     dbc.Row([
         dbc.Col([
@@ -61,7 +61,7 @@ app.layout = dbc.Container([
         ], width=6),
     ], className="mb-4"),
 
-    dbc.Button("Predict Profit", id='predict_button', color="primary", className="mb-3"),
+    dbc.Button("Predict Total Item Quantity", id='predict_button', color="primary", className="mb-3"),
     html.Div(id='prediction-output')
 ])
 
@@ -71,7 +71,7 @@ app.layout = dbc.Container([
     State('model_selector', 'value'),
     [State(field, 'value') for field in numerical_features]
 )
-def predict_profit(n_clicks, selected_model, *inputs):
+def predict_totalitemquantity(n_clicks, selected_model, *inputs):
     if n_clicks:
         input_data = dict(zip(numerical_features, inputs))
         df = pd.DataFrame([input_data])
@@ -107,7 +107,7 @@ def predict_profit(n_clicks, selected_model, *inputs):
                         'layout': {
                             'title': f'{selected_model} Prediction Visualization',
                             'xaxis': {'title': 'Prediction Index'},
-                            'yaxis': {'title': 'Predicted Profit'}
+                            'yaxis': {'title': 'Predicted Total Item Quantity'}
                         }
                     }
                 )

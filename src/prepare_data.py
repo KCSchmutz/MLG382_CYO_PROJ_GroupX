@@ -4,7 +4,7 @@ import os
 from sklearn.model_selection import train_test_split
 
 
-# Function to split the dataset dropping column (Objective is to predict profit)
+# Function to split the dataset dropping column (Objective is to predict TotalItemQuantity)
 def split_features_target(df, target_column='TotalItemQuantity'):
     X = df.drop(target_column, axis=1)
     Y = df[target_column]

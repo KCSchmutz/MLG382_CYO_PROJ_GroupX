@@ -24,14 +24,14 @@ def get_DLmodel():
 
 
 
-with open(os.path.join(ARTIFACTS_DIR, 'features.pkl'), 'rb') as f:
-    features = pickle.load(f)
+# with open(os.path.join(ARTIFACTS_DIR, 'features.pkl'), 'rb') as f:
+#     features = pickle.load(f)
 
-with open(os.path.join(ARTIFACTS_DIR, 'scaler.pkl'), 'rb') as f:
-    scaler = pickle.load(f)
+# with open(os.path.join(ARTIFACTS_DIR, 'scaler.pkl'), 'rb') as f:
+#     scaler = pickle.load(f)
 
-with open(os.path.join(ARTIFACTS_DIR, 'numerical_columns.pkl'), 'rb') as f:
-    numerical_cols = pickle.load(f)
+# with open(os.path.join(ARTIFACTS_DIR, 'numerical_columns.pkl'), 'rb') as f:
+#     numerical_cols = pickle.load(f)
 
 with open(os.path.join(ARTIFACTS_DIR, 'RandomForestRegressor_model.pkl'), 'rb') as f:
     randomforest_model = pickle.load(f)

@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 
 
 # Function to split the dataset dropping column (Objective is to predict profit)
-def split_features_target(df, target_column='Profit'):
+def split_features_target(df, target_column='TotalItemQuantity'):
     X = df.drop(target_column, axis=1)
     Y = df[target_column]
     return X, Y
@@ -29,10 +29,10 @@ def create_train_test_split(X, Y, test_size=0.2, random_state=42, save_csv=True)
         # Only saves if the files don't already exist
         if not os.path.exists(train_path) or not os.path.exists(test_path):
             train_df = X_train.copy()
-            train_df["Profit"] = Y_train
+            train_df["TotalItemQuantity"] = Y_train
 
             test_df = X_test.copy()
-            test_df["Profit"] = Y_test
+            test_df["TotalItemQuantity"] = Y_test
 
             train_df.to_csv(train_path, index=False)
             test_df.to_csv(test_path, index=False)

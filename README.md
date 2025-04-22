@@ -5,15 +5,15 @@
  > ### Eduard Jacobus Engelbrecht
  -----------------------------------------------------------------------------------------
  - [x] ## Choose a Project: Inventory management
- - [ ] ## Research Relevant Datasets:
+ - [x] ## Research Relevant Datasets:
  - [x] __Choose a Project:__ Inventory management
- - [ ] __Research Relevant Datasets:__
+ - [x] __Research Relevant Datasets:__
  Begin by searching for datasets relevant to your 
  chosen project from public sources such as Kaggle, UCI Machine Learning 
  Repository, or government databases. Look for datasets that include the necessary 
  features and target variables for training your ML model.
- - [ ] ## Data Exploration and Pre-processing:
- - [ ] __Data Exploration and Pre-processing:__
+ - [x] ## Data Exploration and Pre-processing:
+ - [x] __Data Exploration and Pre-processing:__
  Once you have obtained a suitable dataset, 
  perform exploratory data analysis (EDA) to understand its structure, distributions, and 
  relationships between variables. Clean the data by handling missing values, outliers, 
@@ -21,8 +21,8 @@
  categorical variables, and splitting the data into training and testing sets.
  > ### Noah Blaauw
  -----------------------------------------------------------------------------------------
- - [ ] ## Develop ML Model(s):
- - [ ] __Develop ML Model(s):__
+ - [x] ## Develop ML Model(s):
+ - [x] __Develop ML Model(s):__
  Choose appropriate machine learning algorithms and 
  techniques based on the nature of your project (e.g., classification, regression, 
  clustering). Train and evaluate multiple models using cross-validation and hyper
@@ -43,14 +43,14 @@
  your application to a live server.
  > ### Karl Schmutz
  -----------------------------------------------------------------------------------------
- - [ ] ## Testing and Validation:
- - [ ] __Testing and Validation:__
+ - [x] ## Testing and Validation:
+ - [x] __Testing and Validation:__
  Test your web application thoroughly to ensure that it 
  functions as intended and provides accurate predictions based on user input. Validate 
  the performance of your deployed ML model(s) by comparing predictions with ground 
  truth labels or expected outcomes.
- - [ ] ## Documentation and Presentation:
- - [ ] __Documentation and Presentation:__
+ - [x] ## Documentation and Presentation:
+ - [x] __Documentation and Presentation:__
  Document your project thoroughly, including 
  details of the dataset, ML model(s), web application development process, and 
  deployment steps. Prepare a presentation to showcase your project, highlighting key 

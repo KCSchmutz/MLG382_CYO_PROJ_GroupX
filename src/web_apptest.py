@@ -94,7 +94,7 @@ def predict_totalitemquantity(n_clicks, selected_model, *inputs):
             dbc.Card([
                 dbc.CardHeader("Prediction Result"),
                 dbc.CardBody([
-                    html.H5(f"{selected_model} Prediction: ${pred:.2f}")
+                    html.H5(f"{selected_model} Prediction: {pred:.2f} Total Order Item Quantity")
                 ])
             ], color="light"),
             html.Div([

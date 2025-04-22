@@ -37,33 +37,93 @@ default_values = df_ref.iloc[0].to_dict()
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
+COLORS = {
+    "primary": "#1a1b41",      # Navy blue
+    "background": "#fdfffc",   # Off-white
+    "accent": "#c1c9d9",       # Optional: subtle highlight
+    "text": "#1a1b41",         # Match primary for dark text
+    "card_bg": "#ffffff"       # Clean white cards
+}
+
+
 app.layout = dbc.Container([
-    html.H2("Total Item Quantity Prediction Tool", className="text-center text-primary my-4"),
+    dbc.Card([
+        dbc.CardBody([
 
-    dbc.Row([
-        dbc.Col([
-            dbc.Label(field),
-            dbc.Input(id=field, type='number', value=default_values.get(field, 0))
-        ], width=4) for field in numerical_features
-    ], className="mb-3"),
+            html.H2("Total Item Quantity Prediction Tool", className="text-center", style={
+                "color": COLORS["primary"], "marginTop": "30px", "marginBottom": "30px"
+            }),
 
-    dbc.Row([
-        dbc.Col([
-            dbc.Label("Select Model"),
-            dcc.Dropdown(
-                id='model_selector',
-                options=[
-                    {'label': model_name, 'value': model_name}
-                    for model_name in ["Deep Learning", "RandomForest", "AdaBoost", "GradientBoosting", "XGBoost"]
-                ],
-                value="Random Forest"
-            )
-        ], width=6),
-    ], className="mb-4"),
+            dbc.Row([
+                dbc.Col([
 
-    dbc.Button("Predict Total Item Quantity", id='predict_button', color="primary", className="mb-3"),
-    html.Div(id='prediction-output')
-])
+                    # Product Details
+                    dbc.Card([
+                        dbc.CardHeader("Product Details", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    dbc.Label(field, style={"color": COLORS["text"]}),
+                                    dbc.Input(id=field, type='number', value=default_values.get(field, 0), className="mb-3")
+                                ]) for field in numerical_features if 'Product' in field or 'Category' in field
+                            ])
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    # Order Details
+                    dbc.Card([
+                        dbc.CardHeader("Order Details", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    dbc.Label(field, style={"color": COLORS["text"]}),
+                                    dbc.Input(id=field, type='number', value=default_values.get(field, 0), className="mb-3")
+                                ]) for field in numerical_features if 'Order' in field or 'Month' in field or 'Day' in field or field not in ['Product', 'Category']
+                            ])
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    # Model Selection
+                    dbc.Card([
+                        dbc.CardHeader("Model Selection", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Label("Select Model", style={"color": COLORS["text"]}),
+                            dcc.Dropdown(
+                                id='model_selector',
+                                options=[{'label': name, 'value': name} for name in ["Deep Learning", "RandomForest", "AdaBoost", "GradientBoosting", "XGBoost"]],
+                                value="RandomForest",
+                                className="mb-3"
+                            ),
+                            dbc.Button("Predict Total Item Quantity", id='predict_button', color="dark", className="w-100")
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    html.Div(id='prediction-output')
+
+                ], width=8, className="mx-auto")
+            ])
+
+        ])
+    ], style={
+        "padding": "30px",
+        "marginTop": "40px",
+        "boxShadow": "0 4px 15px rgba(0, 0, 0, 0.1)",
+        "borderRadius": "15px",
+        "backgroundColor": "#ffffff"
+    })
+], fluid=True, style={
+    "backgroundColor": COLORS["background"],
+    "paddingBottom": "50px",
+    "paddingTop": "30px"
+})
+
+
 
 @app.callback(
     Output('prediction-output', 'children'),
@@ -98,19 +158,7 @@ def predict_totalitemquantity(n_clicks, selected_model, *inputs):
                 ])
             ], color="light"),
             html.Div([
-                html.Hr(),
-                dcc.Graph(
-                    figure={
-                        'data': [
-                            {'x': list(range(1, 2)), 'y': [pred], 'type': 'line', 'name': selected_model}
-                        ],
-                        'layout': {
-                            'title': f'{selected_model} Prediction Visualization',
-                            'xaxis': {'title': 'Prediction Index'},
-                            'yaxis': {'title': 'Predicted Total Item Quantity'}
-                        }
-                    }
-                )
+                html.Hr()
             ])
         ])
 

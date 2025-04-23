@@ -7,23 +7,24 @@ import pickle
 from tensorflow.keras.models import load_model
 
 # Load model artifacts
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # root of repo
+
 model_paths = {
-    "AdaBoost": "../artifacts/AdaBoostRegressor_model.pkl",
-    "GradientBoosting": "../artifacts/GradientBoostingRegressor_model.pkl",
-    "RandomForest": "../artifacts/RandomForestRegressor_model.pkl",
-    "XGBoost": "../artifacts/XGBRegressor_model.pkl",
+    "AdaBoost": os.path.join(base_dir, "artifacts", "AdaBoostRegressor_model.pkl"),
+    "GradientBoosting": os.path.join(base_dir, "artifacts", "GradientBoostingRegressor_model.pkl"),
+    "RandomForest": os.path.join(base_dir, "artifacts", "RandomForestRegressor_model.pkl"),
+    "XGBoost": os.path.join(base_dir, "artifacts", "XGBRegressor_model.pkl"),
 }
+
 
 models = {}
 for name, path in model_paths.items():
     with open(path, 'rb') as f:
         models[name] = pickle.load(f)
 
-# Load deep learning model without compiling (for inference only)
-DL_model = load_model("../artifacts/DeepLearningRegressor.h5", compile=False)
+DL_model = load_model(os.path.join(base_dir, "artifacts", "DeepLearningRegressor.h5"), compile=False)
+df_ref = pd.read_csv(os.path.join(base_dir, "artifacts", "processed_data.csv"))
 
-# Load reference data to infer input features
-df_ref = pd.read_csv("../artifacts/processed_data.csv")
 if 'TotalItemQuantity' in df_ref.columns:
     df_ref.drop(columns=['TotalItemQuantity'], inplace=True)
 
@@ -154,7 +155,7 @@ def predict_totalitemquantity(n_clicks, selected_model, *inputs):
             dbc.Card([
                 dbc.CardHeader("Prediction Result"),
                 dbc.CardBody([
-                    html.H5(f"{selected_model} Prediction: ${pred:.2f}")
+                    html.H5(f"{selected_model} Prediction: {pred:.2f} Total Item Quantity")
                 ])
             ], color="light"),
             html.Div([

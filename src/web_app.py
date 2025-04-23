@@ -1,197 +1,168 @@
 import os
-import pickle
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-# Dynamically build the path to the artifacts directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ARTIFACTS_DIR = os.path.join(BASE_DIR, '..', 'artifacts')
-
-
-import xgboost as xgb
-import pickle
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from dash import Dash, html, dcc, Input, Output, State
+import dash_bootstrap_components as dbc
+import pickle
 from tensorflow.keras.models import load_model
-from dash import Dash, html, dcc, Input, Output
-from functools import lru_cache
 
-@lru_cache(maxsize=1)
-def get_DLmodel():
-    print("Loading deep learning model...")
-    return load_model(r'artifacts/deep_learning_model.h5') 
+# Load model artifacts
+model_paths = {
+    "AdaBoost": "../artifacts/AdaBoostRegressor_model.pkl",
+    "GradientBoosting": "../artifacts/GradientBoostingRegressor_model.pkl",
+    "RandomForest": "../artifacts/RandomForestRegressor_model.pkl",
+    "XGBoost": "../artifacts/XGBRegressor_model.pkl",
+}
 
+models = {}
+for name, path in model_paths.items():
+    with open(path, 'rb') as f:
+        models[name] = pickle.load(f)
 
+# Load deep learning model without compiling (for inference only)
+DL_model = load_model("../artifacts/DeepLearningRegressor.h5", compile=False)
 
-# with open(os.path.join(ARTIFACTS_DIR, 'features.pkl'), 'rb') as f:
-#     features = pickle.load(f)
+# Load reference data to infer input features
+df_ref = pd.read_csv("../artifacts/processed_data.csv")
+if 'TotalItemQuantity' in df_ref.columns:
+    df_ref.drop(columns=['TotalItemQuantity'], inplace=True)
 
-# with open(os.path.join(ARTIFACTS_DIR, 'scaler.pkl'), 'rb') as f:
-#     scaler = pickle.load(f)
+all_features = df_ref.columns.tolist()
+numerical_features = [col for col in df_ref.columns if df_ref[col].nunique() > 10 and not any(prefix in col for prefix in ['RegionName_', 'CountryName_', 'State_', 'City_', 'CategoryName_'])]
+categorical_features = [col for col in df_ref.columns if col not in numerical_features]
 
-# with open(os.path.join(ARTIFACTS_DIR, 'numerical_columns.pkl'), 'rb') as f:
-#     numerical_cols = pickle.load(f)
+# Get default values from the first row of the dataset
+default_values = df_ref.iloc[0].to_dict()
 
-with open(os.path.join(ARTIFACTS_DIR, 'RandomForestRegressor_model.pkl'), 'rb') as f:
-    randomforest_model = pickle.load(f)
-
-with open(os.path.join(ARTIFACTS_DIR, 'AdaBoostRegressor_model.pkl'), 'rb') as f:
-    regression_model = pickle.load(f)
-
-with open(os.path.join(ARTIFACTS_DIR, 'XGBRegressor_model.pkl'), 'rb') as f:
-    xgboost_model = pickle.load(f)
-
-
-# with open(r'../artifacts/GradientBoostingRegressor_model.pkl', 'rb') as f:
-#     gradboost_model = pickle.load(f)
-
-
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
-# Sample input layout
-app.layout = html.Div([
-    html.H1("Student Grade Predictor"),
-    html.P("Enter values below to predict the grade class"),
-    dcc.Input(id='age', type='number', placeholder='Age', value=18),
-    dcc.Dropdown(
-            id='gender', 
-            options=[{'label': 'Male', 'value': 0}, {'label': 'Female', 'value': 1}],
-            placeholder="Select Gender", value=0),
-    dcc.Input(id='study_time', type='number', placeholder='Study Time Weekly', value=15),
-    dcc.Input(id='absences', type='number', placeholder='Absences', value=5),
-    dcc.Input(id='gpa', type='number', placeholder='GPA', value=2),
-    dcc.Dropdown(
-        id='ethnicity',
-        options=[{'label': f'Ethnicity_{i}', 'value': i} for i in range(4)],
-        placeholder="Select Ethnicity",
-        value=0
-    ),
-    dcc.Dropdown(
-        id='parental_education',
-        options=[{'label': f'Parental Education {i}', 'value': i} for i in range(5)],
-        placeholder="Select Parental Education",
-        value=0
-    ),
-    dcc.Dropdown(
-        id='parental_support',
-        options=[{'label': f'Parental Support {i}', 'value': i} for i in range(5)],
-        placeholder="Select Parental Support",
-        value=0
-    ),
-    dcc.Checklist(
-        id='sports',
-        options=[{'label': 'Sports', 'value': 1}],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    ),
-    dcc.Checklist(
-        id='music',
-        options=[{'label': 'Music', 'value': 1}],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    ),
-     dcc.Checklist(
-        id='tutoring',
-        options=[{'label': 'Tutoring', 'value': 1}],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    ),
-     dcc.Checklist(
-        id='extracurricular',
-        options=[{'label': 'Extracurricular', 'value': 1}],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    ),
-     dcc.Checklist(
-        id='volunteering',
-        options=[{'label': 'Volunteering', 'value': 1}],
-        value=[],
-        labelStyle={'display': 'inline-block'}
-    ),
-    html.Button("Predict", id='predict_button', n_clicks=0),
-    html.Div(id='prediction-output')
-])
+COLORS = {
+    "primary": "#1a1b41",      # Navy blue
+    "background": "#fdfffc",   # Off-white
+    "accent": "#c1c9d9",       # Optional: subtle highlight
+    "text": "#1a1b41",         # Match primary for dark text
+    "card_bg": "#ffffff"       # Clean white cards
+}
+
+
+app.layout = dbc.Container([
+    dbc.Card([
+        dbc.CardBody([
+
+            html.H2("Total Item Quantity Prediction Tool", className="text-center", style={
+                "color": COLORS["primary"], "marginTop": "30px", "marginBottom": "30px"
+            }),
+
+            dbc.Row([
+                dbc.Col([
+
+                    # Product Details
+                    dbc.Card([
+                        dbc.CardHeader("Product Details", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    dbc.Label(field, style={"color": COLORS["text"]}),
+                                    dbc.Input(id=field, type='number', value=default_values.get(field, 0), className="mb-3")
+                                ]) for field in numerical_features if 'Product' in field or 'Category' in field
+                            ])
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    # Order Details
+                    dbc.Card([
+                        dbc.CardHeader("Order Details", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Row([
+                                dbc.Col([
+                                    dbc.Label(field, style={"color": COLORS["text"]}),
+                                    dbc.Input(id=field, type='number', value=default_values.get(field, 0), className="mb-3")
+                                ]) for field in numerical_features if 'Order' in field or 'Month' in field or 'Day' in field or field not in ['Product', 'Category']
+                            ])
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    # Model Selection
+                    dbc.Card([
+                        dbc.CardHeader("Model Selection", style={
+                            "backgroundColor": COLORS["primary"], "color": COLORS["background"]
+                        }),
+                        dbc.CardBody([
+                            dbc.Label("Select Model", style={"color": COLORS["text"]}),
+                            dcc.Dropdown(
+                                id='model_selector',
+                                options=[{'label': name, 'value': name} for name in ["Deep Learning", "RandomForest", "AdaBoost", "GradientBoosting", "XGBoost"]],
+                                value="RandomForest",
+                                className="mb-3"
+                            ),
+                            dbc.Button("Predict Total Item Quantity", id='predict_button', color="dark", className="w-100")
+                        ])
+                    ], className="mb-4", style={"backgroundColor": COLORS["card_bg"]}),
+
+                    html.Div(id='prediction-output')
+
+                ], width=8, className="mx-auto")
+            ])
+
+        ])
+    ], style={
+        "padding": "30px",
+        "marginTop": "40px",
+        "boxShadow": "0 4px 15px rgba(0, 0, 0, 0.1)",
+        "borderRadius": "15px",
+        "backgroundColor": "#ffffff"
+    })
+], fluid=True, style={
+    "backgroundColor": COLORS["background"],
+    "paddingBottom": "50px",
+    "paddingTop": "30px"
+})
+
+
 
 @app.callback(
     Output('prediction-output', 'children'),
-    [Input('predict_button', 'n_clicks'),
-     Input('age', 'value'),
-     Input('gender', 'value'),
-     Input('study_time', 'value'),
-     Input('absences', 'value'),
-     Input('tutoring', 'value'),
-     Input('extracurricular', 'value'),
-     Input('sports', 'value'),
-     Input('music', 'value'),
-     Input('volunteering', 'value'),
-     #Input('gpa', 'value'),
-     Input('ethnicity', 'value'),
-     Input('parental_education', 'value'),
-     Input('parental_support', 'value')]
+    Input('predict_button', 'n_clicks'),
+    State('model_selector', 'value'),
+    [State(field, 'value') for field in numerical_features]
 )
-def predict_grade(n_clicks, age, gender,study_time, absences, tutoring,extracurricular, sports, music, volunteering, ethnicity, parental_education, parental_support):
-    if n_clicks > 0 and None not in (age, gender, study_time, absences, ethnicity, parental_education, parental_support):
-         input_data = {
-            'Age': [age],
-            'Gender': [gender],
-            'Ethnicity': [ethnicity],
-            'ParentalEducation': [parental_education],
-            'StudyTimeWeekly': [study_time],
-            'Absences': [absences],
-            'Tutoring': [1 if tutoring and 1 in tutoring else 0],
-            'ParentalSupport': [parental_support],
-            'Extracurricular': [1 if extracurricular and 1 in extracurricular else 0],
-            'Sports': [1 if sports and  1 in sports else 0],
-            'Music': [1 if music and 1 in music else 0],
-            'Volunteering': [1 if volunteering and 1 in volunteering else 0]
-            #'GPA': [gpa],
-        }
-         
-         input_df = pd.DataFrame(input_data)
+def predict_totalitemquantity(n_clicks, selected_model, *inputs):
+    if n_clicks:
+        input_data = dict(zip(numerical_features, inputs))
+        df = pd.DataFrame([input_data])
 
+        # Add zero columns for all other features
+        for col in all_features:
+            if col not in df.columns:
+                df[col] = 0
 
-         input_df = input_df[numerical_cols]
-         
+        # Reorder to match model input
+        df = df[all_features]
 
-         input_df[numerical_cols] = scaler.transform(input_df[numerical_cols])
-         
-    
-         #Deep learning
-         print("Loading model...")
-         DL_model = get_DLmodel()
-         print("Model loaded!")
+        # Predict using the selected model
+        if selected_model == "Deep Learning":
+            pred = DL_model.predict(df)[0][0]
+        else:
+            pred = models[selected_model].predict(df)[0]
 
-         dl_prediction = DL_model.predict(input_df)
-         rf_prediction = randomforest_model.predict(input_df)
-         logreg_prediction = regression_model.predict(input_df)
-         xgboost_prediction = xgboost_model.predict(input_df)
-         print("Prediction done")
-
-         if len(dl_prediction.shape) == 2 and dl_prediction.shape[1] > 1:
-             class_prediction = np.argmax(dl_prediction)
-             probability = np.max(dl_prediction)
-         else:
-             class_prediction = int(round(float(dl_prediction[0][0])))
-             probability = float(dl_prediction[0][0]) if class_prediction == 1 else 1 - float(dl_prediction[0][0])
-
-         probability_percent = probability * 100
-         
-        
-
-         return html.Div([
-            html.P(f"Deep Learning Prediction: {class_prediction} (Confidence: {probability_percent:.2f}%)"),
-            html.P(f"Random Forest Prediction: {rf_prediction[0]}"),
-            html.P(f"Logistic Regression Prediction: {logreg_prediction[0]}"),
-            html.P(f"XGBoost Prediction: {xgboost_prediction[0]}")
-])
+        return html.Div([
+            dbc.Card([
+                dbc.CardHeader("Prediction Result"),
+                dbc.CardBody([
+                    html.H5(f"{selected_model} Prediction: ${pred:.2f}")
+                ])
+            ], color="light"),
+            html.Div([
+                html.Hr()
+            ])
+        ])
 
     return "Please fill in all fields."
-        
-if __name__ == "__main__":
-    print("Launching Dash app...")
-    try:
-        app.run(debug=True, host='127.0.0.1', port=8050)
-    except Exception as e:
-        print("Failed to start server:", e)
+
+if __name__ == '__main__':
+    app.run(debug=True)
